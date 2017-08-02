@@ -46,15 +46,21 @@ Participant information requires:
   * age
     
 Protocol information requires
-  * NIMS_scan_title (e.g. 3Plane_Loc_fgre)
-  * BIDS_scan_title (following the bids naming convention, if you would not like this to go to your bids folder, leave blank)
-  * run_number (if applicable, if not, leave blank)
-  * repition_time (if applicable, if not, leave blank)
+  * NIMS_scan_title 
+  	*e.g. 3Plane_Loc_fgre
+  * BIDS_scan_title 
+  	*following the bids naming convention, if you would not like this to go to your bids folder, leave blank
+  * full_task_name 
+  	*e.g. "balloonanalogrisktask" to "balloon analog risk task"
+  * run_number 
+  	*if applicable, if not, leave blank
+  * repetion_time 
+  	*if applicable, if not, leave blank
   
  Once the BIDS_info document is filled out, running the script will prompt you for:
   * file path to project folder
-  * full names for task in protocol (e.g. "balloonanalogrisktask" to "balloon analog risk task")
  
-The script may quit with an error message if:
-  * you are missing participants listed in your participants sheet
-  * your number of scans in your participant folders do not match your protocol
+The script will:
+  * check to see if all your participant folders are in NIMS_data
+  * check to see if your scans match your protocol
+  * create BIDS_data file, renaming volume files and creating .json and .tsv files
