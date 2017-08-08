@@ -24,7 +24,7 @@ BIDS= project_filepath + '/BIDS_data/'
 NIMS= project_filepath + '/NIMS_data/'
 
 
-# In[11]:
+# In[17]:
 
 #Read files
 
@@ -44,7 +44,7 @@ def makefolder(name):
         os.makedirs(name)
 
 
-# In[12]:
+# In[18]:
 
 #Load and Clean XLS File
 participants = xls.parse('participants')
@@ -67,7 +67,7 @@ NIMS_protocol_filenames = protocol.NIMS_scan_title.tolist() #Convert protocol sc
 NIMS_BIDS_conversion = protocol[["NIMS_scan_title","BIDS_scan_title_path"]]
 
 
-# In[13]:
+# In[19]:
 
 def check_against_protocol(participants,protocol): 
     
@@ -103,12 +103,15 @@ def check_against_protocol(participants,protocol):
         
         
         
-    print("\nAll your folders match your protocol\n") if all_files_correct else print("\nSome folders do not match your protocol, please resolve errors\n")
+    if all_files_correct:
+        print("\nAll your folders match your protocol\n")  
+    else:
+        print("\nSome folders do not match your protocol, please resolve errors\n")
     
     return all_files_correct
 
 
-# In[14]:
+# In[20]:
 
 def write_text_files(participants, protocol): 
     
@@ -138,7 +141,7 @@ def write_text_files(participants, protocol):
     participant_tsv.to_csv(BIDS + 'participants.tsv', sep='\t', index=False)
 
 
-# In[15]:
+# In[21]:
 
 def convert_to_bids(participants, protocol):
     
@@ -179,7 +182,12 @@ def convert_to_bids(participants, protocol):
         print("\nDone!")
 
 
-# In[16]:
+# In[22]:
 
 convert_to_bids(participants, protocol)
+
+
+# In[ ]:
+
+
 
