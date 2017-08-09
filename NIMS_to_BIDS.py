@@ -5,7 +5,7 @@ from __future__ import absolute_import
 
 # coding: utf-8
 
-# In[6]:
+# In[ ]:
 
 from builtins import input
 from builtins import open
@@ -19,41 +19,48 @@ import os
 import re
 from shutil import copyfile
 import json
+import sys
 
 
-# In[7]:
+# In[ ]:
 
 #Get Data Filepath
+if (len(sys.argv) == 2):
+    project_filepath = str(sys.argv[1]).strip(' ')
+else:
+    #"Data needs to be in format: \n       Project Filename            \n        /          \\              \n    NIMS_data  BIDS_info.xlsx      \n       /                           \nSub1 Sub2 Sub3                     \n\n                                   \n
+    print("NIMS_to_BIDS.py can take the project's file path as an argument\nNo argument detected\nPlease drag in file path from folder")
+    project_filepath = input().strip(' ')
 
-print("Data needs to be in format: \n       Project Filename            \n        /          \\              \n    NIMS_data  BIDS_info.xlsx      \n       /                           \nSub1 Sub2 Sub3                     \n\n                                   \nPlease drag in project filepath    \n")
-      
-project_filepath = input().strip(' ')
 
-      
 #path variables
 BIDS= project_filepath + '/BIDS_data/'
 NIMS= project_filepath + '/NIMS_data/'
 
 
-# In[14]:
+# In[ ]:
 
 #Read files
 
 #Figure out what bids info xlsx is named 
 project_file_contents = os.listdir(project_filepath)
 BIDS_filename = [x for x in project_file_contents if "BIDS_info" in x]
+print(BIDS_filename)
 
+#Make sure there's only one bids file
 assert len(BIDS_filename) == 1, 'This folder does not have a BIDS_info file or it has more than one info file' 
-xls = pd.ExcelFile(project_filepath + "/" + BIDS_filename[0])
 
+xls = pd.ExcelFile(project_filepath + "/" + BIDS_filename[0])
 
 #Make folder if folder doesn't exist function
 def makefolder(name):
     if not os.path.exists(name):
         os.makedirs(name)
+        
+#Log Function
 
 
-# In[15]:
+# In[ ]:
 
 #Load and Clean XLS File
 participants = xls.parse('participants')
@@ -77,18 +84,19 @@ NIMS_protocol_filenames = protocol.NIMS_scan_title.tolist() #Convert protocol sc
 NIMS_BIDS_conversion = protocol[["NIMS_scan_title","BIDS_scan_title_path"]]
 
 
-# In[16]:
+# In[ ]:
 
 def check_against_protocol(participants,protocol): 
     
     all_files_correct = True
-
+    
     for index, row in participants.iterrows():
-        
+
         #If directory is there, try will work
         try:
             #Get all files in participant directory
             NIMS_participant_filenames = os.listdir(NIMS + row.nims_title)
+           
             #Delete all non-nii.gz files
             NIMS_participant_filenames = [x for x in NIMS_participant_filenames if ".nii.gz"  in x]
 
@@ -98,17 +106,21 @@ def check_against_protocol(participants,protocol):
                 protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
                 protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
-                if len(directory_filenames) == len(protocol_filenames):
-                    print("sub-" + str(row.participant_id) + ": ++ " + item.rjust(20) + " match")
+                if len(directory_filenames) < len(protocol_filenames):
+                    print('sub-{} : << {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
 
-                else:
-                    print("sub-" + str(row.participant_id) + ": -- "+ item.rjust(20) + " files do not match protocol")
+                elif len(directory_filenames) > len(protocol_filenames):
+                    print('sub-{} : >> {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
                     all_files_correct = False
+                    
+                elif len(directory_filenames) == len(protocol_filenames):
+                    print('sub-{} : == {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+
             print("------------")
         
         except:
             all_files_correct = False
-            print("sub-" + str(row.participant_id) + ": ERROR - folder is missing \n------")
+            print("sub-" + str(row.participant_id) + " : -- ERROR - folder is missing \n------------")
 
         
         
@@ -121,7 +133,7 @@ def check_against_protocol(participants,protocol):
     return all_files_correct
 
 
-# In[20]:
+# In[ ]:
 
 def write_text_files(participants, protocol): 
     
@@ -165,7 +177,7 @@ def write_text_files(participants, protocol):
     
 
 
-# In[21]:
+# In[ ]:
 
 def convert_to_bids(participants, protocol):
     
@@ -206,7 +218,7 @@ def convert_to_bids(participants, protocol):
         print("\nDone!")
 
 
-# In[22]:
+# In[ ]:
 
 convert_to_bids(participants, protocol)
 
