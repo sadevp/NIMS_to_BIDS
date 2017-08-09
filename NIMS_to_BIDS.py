@@ -57,6 +57,7 @@ def makefolder(name):
 
 #Load and Clean XLS File
 participants = xls.parse('participants')
+participants.participant_id = participants.participant_id.astype('str')
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,:6] #columns 5 on are reference columns
 protocol = protocol.dropna(axis=0, thresh=3) #get rid of items that don't have a bids equivalent
