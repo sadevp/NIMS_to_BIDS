@@ -3,6 +3,13 @@
 ## Summary
 
 Takes neuroimaging downloaded from the Neurobiological Image Managament System at Stanford University (https://cni.stanford.edu/nims/) and converts it to BIDS (http://bids.neuroimaging.io/)
+
+##Usage
+
+python NIMS_to_BIDS.py /path/to/directory
+
+
+
 ```
 NIMS Data Format (e.g)
 
@@ -35,7 +42,7 @@ BIDS Data Format (e.g) http://bids.neuroimaging.io/
                 |-- sub-101_task-empathy_run-04_bold.nii.gz
 ```
 
-## Usage
+
 
 NIMS_to_BIDS uses a BIDS_info.xlsx file as a reference between NIMS and BIDS formatting. 
 
