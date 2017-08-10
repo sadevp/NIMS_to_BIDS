@@ -4,7 +4,7 @@
 
 Takes neuroimaging downloaded from the Neurobiological Image Managament System at Stanford University (https://cni.stanford.edu/nims/) and converts it to BIDS (http://bids.neuroimaging.io/)
 
-##Usage
+## Usage
 
 python NIMS_to_BIDS.py /path/to/directory
 
