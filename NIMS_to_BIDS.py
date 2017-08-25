@@ -20,6 +20,7 @@ import re
 from shutil import copyfile
 import json
 import sys
+import subprocess
 
 
 # In[ ]:
@@ -107,14 +108,14 @@ def check_against_protocol(participants,protocol):
                 protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
                 if len(directory_filenames) < len(protocol_filenames):
-                    print('sub-{} : << {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                    print('{} : sub-{} : << {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
 
                 elif len(directory_filenames) > len(protocol_filenames):
-                    print('sub-{} : >> {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                    print('{} : sub-{} : >> {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
                     all_files_correct = False
                     
                 elif len(directory_filenames) == len(protocol_filenames):
-                    print('sub-{} : == {} {} files in folder {} files in protocol\n'.                    format(str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                    print('{} : sub-{} : == {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
 
             print("------------")
         
@@ -185,6 +186,7 @@ def convert_to_bids(participants, protocol):
     
     if check_against_protocol(participants,protocol): #Function returns true is everything matches
         
+        
         print("Creating BIDS_data folder\n")
         #Make BIDS Folder
         makefolder(BIDS)
@@ -209,6 +211,47 @@ def convert_to_bids(participants, protocol):
                     copyfile(oldpath, newpath)
 
                     print("sub-" + str(row.participant_id) + ": ++ "+ os.path.basename(newpath).rjust(20))
+            print("------------")
+
+        print("\nCreating JSON and .tsv Files")
+        
+        write_text_files(participants, protocol)
+       
+        print("\nDone!")
+
+
+# In[ ]:
+
+def reorient_and_skullstrip(participants, protocol):
+    
+    print("Comparing Folders to Protocol...\n")
+    
+    if check_against_protocol(participants,protocol): #Function returns true is everything matches
+        
+        print("Creating BIDS_data folder\n")
+        #Make BIDS Folder
+        makefolder(BIDS)
+        participants.participant_id.apply(lambda x: makefolder(BIDS + 'sub-' + str(x) + "/anat"))
+        participants.participant_id.apply(lambda x: makefolder(BIDS + 'sub-' + str(x) + "/func"))
+        
+        for index, row in participants.iterrows():
+            #Get files
+            NIMS_participant_filenames = os.listdir(NIMS + row.nims_title)
+
+            #Delete all non-nii.gz files from list
+            NIMS_participant_filenames = [x for x in NIMS_participant_filenames if ".nii.gz"  in x]
+
+            for item in set(NIMS_protocol_filenames):
+                directory_filenames = [x for x in NIMS_participant_filenames if item in x]
+                protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
+                protocol_filenames = protocol_filenames.iloc[:,1].tolist()
+
+                for index, item in enumerate(directory_filenames):
+                    oldpath = (NIMS + row.nims_title + "/" + directory_filenames[index])
+                    newpath = (protocol_filenames[index].replace("###", str(row.participant_id)))
+                    copyfile(oldpath, newpath)
+
+                    print("sub-" + str(row.participant_id) + ": ++ "+ os.path.basename(newpath))
             print("------------")
 
         print("\nCreating JSON and .tsv Files")
