@@ -4,6 +4,8 @@
 
 Takes neuroimaging downloaded from the Neurobiological Image Managament System at Stanford University (https://cni.stanford.edu/nims/) and converts it to BIDS (http://bids.neuroimaging.io/)
 
+Data will need to be in legacy format from the NIMS website
+
 ## Usage
 
 python NIMS_to_BIDS.py /path/to/directory
@@ -49,8 +51,7 @@ NIMS_to_BIDS uses a BIDS_info.xlsx file as a reference between NIMS and BIDS for
 Participant information requires: 
   * nims_title (the data and a 5 digit id number)
   * participant_id
-  * sex
-  * age
+
     
 Protocol information requires
   * NIMS_scan_title 
@@ -61,13 +62,13 @@ Protocol information requires
   	*e.g. "balloonanalogrisktask" to "balloon analog risk task"
   * run_number 
   	*if applicable, if not, leave blank
-  * repetion_time 
+  * repetition_time 
   	*if applicable, if not, leave blank
   
  Once the BIDS_info document is filled out, running the script will prompt you for:
   * file path to project folder
  
 The script will:
-  * check to see if all your participant folders are in NIMS_data
+  * check to see if all your participant folders are in NIMS_data folder
   * check to see if your scans match your protocol
   * create BIDS_data file, renaming volume files and creating .json and .tsv files
