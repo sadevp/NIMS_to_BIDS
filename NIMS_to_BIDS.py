@@ -66,7 +66,7 @@ participants.participant_id = ['%02d' % int(n) for n in participants.participant
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,:6] #columns 5 on are reference columns
 protocol = protocol.dropna(axis=0, thresh=3) #get rid of items that don't have a bids equivalent
-protocol.run_str = ['_run-%02d' % n for n in protocol.run_number if not np.isnan(n) else '_']
+protocol.run_str = ['_run-%02d' % n if not np.isnan(n) else '_' for n in protocol.run_number]
 #protocol.run_number = protocol.run_number.astype('str').str.strip('.0').str.zfill(2) #Convert run int to string
 
 fieldmap = xls.parse('fieldmap', convert_float=False)
