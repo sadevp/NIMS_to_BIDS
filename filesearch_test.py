@@ -89,7 +89,7 @@ def check_against_protocol(participants,protocol):
     for index, row in participants.iterrows():
 
     	NIMS_participant = opj(NIMS, row.nims_title)
-    	NIMS_participant_subdirs = os.listfiles(NIMS_participant)
+    	NIMS_participant_subdirs = os.listdir(NIMS_participant)
 
     	print(NIMS_participant_subdirs)
 
