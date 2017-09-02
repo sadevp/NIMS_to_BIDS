@@ -21,25 +21,25 @@ from shutil import copyfile
 import json
 import sys
 import subprocess
+import pdb # Debugging
+from os.path import join as opj # Helper function
 
+home_dir = os.environ['PI_HOME']
 
-# In[ ]:
 
 #Get Data Filepath
 if (len(sys.argv) == 2):
-    project_filepath = str(sys.argv[1]).strip(' ')
+    project_dir = str(sys.argv[1]).strip(' ')
 else:
     #"Data needs to be in format: \n       Project Filename            \n        /          \\              \n    NIMS_data  BIDS_info.xlsx      \n       /                           \nSub1 Sub2 Sub3                     \n\n                                   \n
     print("NIMS_to_BIDS.py can take the project's file path as an argument\nNo argument detected\nPlease drag in file path from folder")
-    project_filepath = input().strip(' ')
+    project_dir = input().strip(' ')
 
+project_filepath = opj(home_dir, project_dir)
 
 #path variables
-BIDS= project_filepath + '/BIDS_data/'
-NIMS= project_filepath + '/NIMS_data/'
-
-
-# In[ ]:
+BIDS= opj(project_filepath, 'BIDS_data')
+NIMS= opj(project_filepath, 'NIMS_data')
 
 #Read files
 
@@ -58,11 +58,6 @@ def makefolder(name):
     if not os.path.exists(name):
         os.makedirs(name)
         
-#Log Function
-
-
-# In[ ]:
-
 #Load and Clean XLS File
 participants = xls.parse('participants')
 participants.participant_id = participants.participant_id.astype('str')
@@ -71,6 +66,9 @@ protocol = xls.parse('protocol', convert_float=False).iloc[1:,:6] #columns 5 on 
 protocol = protocol.dropna(axis=0, thresh=3) #get rid of items that don't have a bids equivalent
 protocol.run_number = protocol.run_number.astype('str').str.strip('.0').str.zfill(2) #Convert run int to string
 
+fieldmap = xls.parse('fieldmap', convert_float=False)
+fieldmap.intended_for = [str(s) for s in fieldmap.intended_for]
+fieldmap.intended_for = [s.split() for s in fieldmap.intended_for]
 
 #Create "bold" portion of filename
 protocol['bold_filename'] = ''
@@ -272,6 +270,3 @@ convert_to_bids(participants, protocol)
 
 
 # In[ ]:
-
-
-
