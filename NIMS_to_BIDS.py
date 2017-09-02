@@ -14,6 +14,7 @@ from future import standard_library
 standard_library.install_aliases()
 print("Importing Libraries...\n")
 
+import numpy as np
 import pandas as pd
 import os
 import re
@@ -65,7 +66,7 @@ participants.participant_id = ['%02d' % int(n) for n in participants.participant
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,:6] #columns 5 on are reference columns
 protocol = protocol.dropna(axis=0, thresh=3) #get rid of items that don't have a bids equivalent
-protocol.run_number = ['%02d' % int(n) for n in protocol.run_number]
+protocol.run_str = ['_run-%02d' % n for n in protocol.run_number if not np.isnan(n) else '_']
 #protocol.run_number = protocol.run_number.astype('str').str.strip('.0').str.zfill(2) #Convert run int to string
 
 fieldmap = xls.parse('fieldmap', convert_float=False)
@@ -78,7 +79,7 @@ protocol.loc[protocol['ANAT_or_FUNC'] == 'func', 'bold_filename'] = '_bold'
 
 #Concatanate filepath and clean
 protocol.subj_dirs = opj(BIDS, 'subj-###')
-protocol["BIDS_scan_title_path"] = BIDS + "/sub-###/" + protocol.ANAT_or_FUNC + "/sub-###_" + protocol.BIDS_scan_title + "_run-" + protocol.run_number + protocol.bold_filename + ".nii.gz"
+protocol["BIDS_scan_title_path"] = BIDS + "/sub-###/" + protocol.ANAT_or_FUNC + "/sub-###_" + protocol.BIDS_scan_title + protocol.run_str + protocol.bold_filename + ".nii.gz"
 protocol.BIDS_scan_title_path = protocol.BIDS_scan_title_path.str.replace('_run-nan', '') #For items that don't have runs
 
 #Create list for NIMS -> bids conversion
