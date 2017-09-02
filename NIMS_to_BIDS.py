@@ -252,5 +252,5 @@ def reorient_and_skullstrip(participants, protocol):
 		print("\nDone!")
 
 # Run conversion
-check_against_protocol(participants, protocol)
-#convert_to_bids(participants, protocol)
+#check_against_protocol(participants, protocol)
+convert_to_bids(participants, protocol)
