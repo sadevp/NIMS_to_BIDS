@@ -94,7 +94,7 @@ def check_against_protocol(participants,protocol):
 
         for item in set(NIMS_protocol_filenames):
             protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
-            print protocol_dirs
+            print(protocol_dirs)
 
 
         # #If directory is there, try will work
