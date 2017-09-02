@@ -22,6 +22,7 @@ import json
 import sys
 import subprocess
 import pdb # Debugging
+import glob
 from os.path import join as opj # Helper function
 
 home_dir = os.environ['PI_HOME']
@@ -94,7 +95,9 @@ def check_against_protocol(participants,protocol):
 
         for item in set(NIMS_protocol_filenames):
             protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
-            print(protocol_dirs)
+            protocol_files = [glob.glob(opj(d, "*.nii.gz")) for d in protocol_dirs]
+
+            print(protocol_files)
 
 
         # #If directory is there, try will work
