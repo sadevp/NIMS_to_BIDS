@@ -100,7 +100,7 @@ def check_against_protocol(participants,protocol):
                 for d in protocol_dirs:
                     protocol_search = glob.glob(opj(d, "*.nii.gz"))
                     directory_filenames.append(protocol_search[0])
-                
+
                 protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
                 protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
