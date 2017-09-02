@@ -94,6 +94,7 @@ def check_against_protocol(participants,protocol):
 	for index, row in participants.iterrows():
 
 		try:
+			pdb.set_trace()
 			NIMS_participant = opj(NIMS, row.nims_title)
 			NIMS_participant_subdirs = [opj(NIMS_participant, d) for d in os.listdir(NIMS_participant)]
 			NIMS_participant_subdirs = [d for d in NIMS_participant_subdirs if os.path.isdir(d)]
