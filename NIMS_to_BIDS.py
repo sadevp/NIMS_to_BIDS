@@ -177,8 +177,8 @@ def convert_to_bids(participants, protocol):
 		print("Creating BIDS_data folder\n")
 		#Make BIDS Folder
 		makefolder(BIDS)
-		participants.participant_id.apply(lambda x: makefolder(BIDS + 'sub-' + str(x) + "/anat"))
-		participants.participant_id.apply(lambda x: makefolder(BIDS + 'sub-' + str(x) + "/func"))
+		participants.participant_id.apply(lambda x: makefolder(opj(BIDS, 'sub-' + str(x), 'anat')))
+		participants.participant_id.apply(lambda x: makefolder(opj(BIDS, 'sub-' + str(x), 'func')))
 		
 		for index, row in participants.iterrows():
 			NIMS_participant = opj(NIMS, row.nims_title)
@@ -197,8 +197,8 @@ def convert_to_bids(participants, protocol):
 
 				for index, item in enumerate(directory_filenames):
 					oldpath = directory_filenames[index]
-					pdb.set_trace()
 					newpath = (protocol_filenames[index].replace("###", str(row.participant_id)))
+					pdb.set_trace()
 					copyfile(oldpath, newpath)
 
 					print("sub-" + str(row.participant_id) + ": ++ "+ os.path.basename(newpath).rjust(20))
