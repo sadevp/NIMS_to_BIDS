@@ -89,51 +89,36 @@ def check_against_protocol(participants,protocol):
     
     for index, row in participants.iterrows():
 
-    	NIMS_participant = opj(NIMS, row.nims_title)
-    	NIMS_participant_subdirs = [opj(NIMS_participant, d) for d in os.listdir(NIMS_participant)]
-    	NIMS_participant_subdirs = [d for d in NIMS_participant_subdirs if os.path.isdir(d)]
+        try:
+        	NIMS_participant = opj(NIMS, row.nims_title)
+        	NIMS_participant_subdirs = [opj(NIMS_participant, d) for d in os.listdir(NIMS_participant)]
+        	NIMS_participant_subdirs = [d for d in NIMS_participant_subdirs if os.path.isdir(d)]                
 
-        for item in set(NIMS_protocol_filenames):
-            protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
-            protocol_files = []
-            for d in protocol_dirs:
-                protocol_search = glob.glob(opj(d, "*.nii.gz"))
-                protocol_files.append(protocol_search[0])
-
-            print(protocol_files)
-
-
-        # #If directory is there, try will work
-        # try:
-        #     #Get all files in participant directory
-        #     NIMS_participant_directories = opj(NIMS, row.nims_title)
-        #     NIMS_participant_filenames = opj(NIMS, row.nims_title)
-           
-        #     #Delete all non-nii.gz files
-        #     NIMS_participant_filenames = [x for x in NIMS_participant_filenames if ".nii.gz"  in x]
-
-
-        #     for item in set(NIMS_protocol_filenames):
+            for item in set(NIMS_protocol_filenames):
+                protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
+                directory_filenames = []
+                for d in protocol_dirs:
+                    protocol_search = glob.glob(opj(d, "*.nii.gz"))
+                    directory_filenames.append(protocol_search[0])
                 
-        #         directory_filenames = [x for x in NIMS_participant_filenames if item in x]
-        #         protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
-        #         protocol_filenames = protocol_filenames.iloc[:,1].tolist()
+                protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
+                protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
-        #         if len(directory_filenames) < len(protocol_filenames):
-        #             print('{} : sub-{} : << {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                if len(directory_filenames) < len(protocol_filenames):
+                    print('{} : sub-{} : << {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
 
-        #         elif len(directory_filenames) > len(protocol_filenames):
-        #             print('{} : sub-{} : >> {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
-        #             all_files_correct = False
+                elif len(directory_filenames) > len(protocol_filenames):
+                    print('{} : sub-{} : >> {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                    all_files_correct = False
                     
-        #         elif len(directory_filenames) == len(protocol_filenames):
-        #             print('{} : sub-{} : == {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
+                elif len(directory_filenames) == len(protocol_filenames):
+                    print('{} : sub-{} : == {} {} files in folder {} files in protocol\n'.                    format(str(row.nims_title), str(row.participant_id), item.rjust(20), len(directory_filenames), len(protocol_filenames)))
 
-        #     print("------------")
+            print("------------")
         
-        # except:
-        #     all_files_correct = False
-        #     print("sub-" + str(row.participant_id) + " : -- ERROR - folder is missing \n------------")
+        except:
+            all_files_correct = False
+            print("sub-" + str(row.participant_id) + " : -- ERROR - folder is missing \n------------")
 
         
         
