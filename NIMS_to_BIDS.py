@@ -93,7 +93,6 @@ def check_against_protocol(participants,protocol):
 			NIMS_participant = opj(NIMS, row.nims_title)
 			NIMS_participant_subdirs = [opj(NIMS_participant, d) for d in os.listdir(NIMS_participant)]
 			NIMS_participant_subdirs = [d for d in NIMS_participant_subdirs if os.path.isdir(d)]
-			print(NIMS_participant_subdirs)
 
 			for item in set(NIMS_protocol_filenames):
 				protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
@@ -174,7 +173,6 @@ def convert_to_bids(participants, protocol):
 	
 	if check_against_protocol(participants,protocol): #Function returns true is everything matches
 		
-		
 		print("Creating BIDS_data folder\n")
 		#Make BIDS Folder
 		makefolder(BIDS)
@@ -228,7 +226,7 @@ def reorient_and_skullstrip(participants, protocol):
 		
 		for index, row in participants.iterrows():
 			#Get files
-			NIMS_participant_filenames = os.listdir(NIMS + row.nims_title)
+			NIMS_participant_filenames = opj(NIMS, row.nims_title)
 
 			#Delete all non-nii.gz files from list
 			NIMS_participant_filenames = [x for x in NIMS_participant_filenames if ".nii.gz"  in x]
@@ -252,15 +250,6 @@ def reorient_and_skullstrip(participants, protocol):
 	   
 		print("\nDone!")
 
-
-# In[ ]:
-
-convert_to_bids(participants, protocol)
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
+# Run conversion
+check_against_protocol(participants, protocol)
+#convert_to_bids(participants, protocol)
