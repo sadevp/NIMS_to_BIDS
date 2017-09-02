@@ -156,7 +156,7 @@ def write_text_files(participants, protocol):
 	participant_tsv = participants.loc[:, ['participant_id', 'sex', 'age']]
 	participant_tsv.loc[:, 'participant_id'] = "sub-" + participant_tsv.loc[:, 'participant_id'].apply(str)
 	#Had to write csv and then change it due to python 2/3 incompatability
-	participant_tsv.to_csv(BIDS + 'participants.tsv', index=False)
+	participant_tsv.to_csv(opj(BIDS, 'participants.tsv'), index=False)
 	# Read in the file
 	with open(BIDS + 'participants.tsv', 'r') as file :
 		filedata = file.read()
