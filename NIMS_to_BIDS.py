@@ -196,7 +196,7 @@ def convert_to_bids(participants, protocol):
 				protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
 				for index, item in enumerate(directory_filenames):
-					oldpath = (NIMS + row.nims_title + "/" + directory_filenames[index])
+					oldpath = directory_filenames[index]
 					pdb.set_trace()
 					newpath = (protocol_filenames[index].replace("###", str(row.participant_id)))
 					copyfile(oldpath, newpath)
