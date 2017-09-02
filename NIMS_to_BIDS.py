@@ -84,7 +84,7 @@ protocol.BIDS_scan_title_path = protocol.BIDS_scan_title_path.str.replace('_run-
 #Create list for NIMS -> bids conversion
 NIMS_protocol_filenames = protocol.NIMS_scan_title.tolist() #Convert protocol scan titles to list
 NIMS_BIDS_conversion = protocol[["NIMS_scan_title","BIDS_scan_title_path"]]
-
+pdb.set_trace()
 
 def check_against_protocol(participants,protocol): 
 	
