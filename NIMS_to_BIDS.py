@@ -80,7 +80,7 @@ protocol.loc[protocol['ANAT_or_FUNC'] == 'func', 'bold_filename'] = '_bold'
 #Concatanate filepath and clean
 protocol.subj_dirs = opj(BIDS, 'subj-###')
 protocol["BIDS_scan_title_path"] = BIDS + "/sub-###/" + protocol.ANAT_or_FUNC + "/sub-###_" + protocol.BIDS_scan_title + protocol.run_str + protocol.bold_filename + ".nii.gz"
-protocol.BIDS_scan_title_path = protocol.BIDS_scan_title_path.str.replace('_run-nan', '') #For items that don't have runs
+#protocol.BIDS_scan_title_path = protocol.BIDS_scan_title_path.str.replace('_run-nan', '') #For items that don't have runs
 
 #Create list for NIMS -> bids conversion
 NIMS_protocol_filenames = protocol.NIMS_scan_title.tolist() #Convert protocol scan titles to list
