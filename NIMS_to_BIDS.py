@@ -165,7 +165,7 @@ def write_text_files(participants, protocol):
 	filedata = filedata.replace(',', '\t')
 
 	# Write the file out again
-	with open(BIDS + 'participants.tsv', 'w') as file:
+	with open(opj(BIDS, 'participants.tsv'), 'w') as file:
 		file.write(filedata)
 	
 	
