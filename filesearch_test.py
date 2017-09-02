@@ -131,4 +131,4 @@ def check_against_protocol(participants,protocol):
 	
 	# return all_files_correct
 
-check_against_protocol(participants, protocol)
+print(check_against_protocol(participants, protocol))
