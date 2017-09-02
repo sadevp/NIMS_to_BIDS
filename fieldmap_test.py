@@ -10,7 +10,7 @@ from __future__ import absolute_import
 from builtins import input
 from builtins import open
 from builtins import str
-from future import standard_library
+from __future__ import standard_library
 standard_library.install_aliases()
 print("Importing Libraries...\n")
 
