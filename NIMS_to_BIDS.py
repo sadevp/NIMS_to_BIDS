@@ -158,7 +158,7 @@ def write_text_files(participants, protocol):
 	#Had to write csv and then change it due to python 2/3 incompatability
 	participant_tsv.to_csv(opj(BIDS, 'participants.tsv'), index=False)
 	# Read in the file
-	with open(BIDS + 'participants.tsv', 'r') as file :
+	with open(opj(BIDS, 'participants.tsv'), 'r') as file :
 		filedata = file.read()
 
 	# Replace the target string
