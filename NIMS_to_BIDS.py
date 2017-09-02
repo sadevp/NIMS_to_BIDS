@@ -65,7 +65,8 @@ participants.participant_id = participants.participant_id.astype('str')
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,:6] #columns 5 on are reference columns
 protocol = protocol.dropna(axis=0, thresh=3) #get rid of items that don't have a bids equivalent
-protocol.run_number = protocol.run_number.astype('str').str.strip('.0').str.zfill(2) #Convert run int to string
+protocol.run_number = ['%03d' % int(n) for n in protocol.run_number]
+#protocol.run_number = protocol.run_number.astype('str').str.strip('.0').str.zfill(2) #Convert run int to string
 
 fieldmap = xls.parse('fieldmap', convert_float=False)
 fieldmap.intended_for = [str(s) for s in fieldmap.intended_for]
@@ -130,8 +131,9 @@ def check_against_protocol(participants,protocol):
 
 def write_text_files(participants, protocol): 
 	
-	def to_file(filename, content): 
-		with open(BIDS + filename + ".json", "w") as text_file:
+	def to_file(filename, content):
+		file_path = opj(BIDS, filename + '.json') 
+		with open(file_path, "w") as text_file:
 			text_file.write(content)
 	
 	#Data Description
