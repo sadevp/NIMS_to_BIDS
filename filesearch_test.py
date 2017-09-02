@@ -120,8 +120,9 @@ def check_against_protocol(participants,protocol):
 			all_files_correct = False
 			print("sub-" + str(row.participant_id) + " : -- ERROR - folder is missing \n------------")
 
-		
-		
+
+	return all_files_correct
+
 		
 	# if all_files_correct:
 	#     print("\nAll your folders match your protocol\n")  
