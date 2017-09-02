@@ -22,6 +22,7 @@ import json
 import sys
 import subprocess
 import pdb # Debugging
+import glob
 from os.path import join as opj # Helper function
 
 home_dir = os.environ['PI_HOME']
