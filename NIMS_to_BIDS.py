@@ -189,6 +189,9 @@ def convert_to_bids(participants, protocol):
 			NIMS_participant_subdirs = [d for d in NIMS_participant_subdirs if os.path.isdir(d)]
 
 			for item in set(NIMS_protocol_filenames):
+				print(item)
+				if item == 'T1w_9mm_sag':
+					pdb.set_trace()
 				protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
 				directory_filenames = []
 				for d in protocol_dirs:
