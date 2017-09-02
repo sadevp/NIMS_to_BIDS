@@ -102,6 +102,7 @@ def check_against_protocol(participants,protocol):
             for item in set(NIMS_protocol_filenames):
                 
                 directory_filenames = [x for x in NIMS_participant_filenames if item in x]
+                pdb.set_trace()
                 protocol_filenames = NIMS_BIDS_conversion[NIMS_BIDS_conversion.NIMS_scan_title.str.contains(item)]
                 protocol_filenames = protocol_filenames.iloc[:,1].tolist()
 
