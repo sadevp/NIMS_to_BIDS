@@ -95,7 +95,10 @@ def check_against_protocol(participants,protocol):
 
         for item in set(NIMS_protocol_filenames):
             protocol_dirs = [d for d in NIMS_participant_subdirs if item in d]
-            protocol_files = [glob.glob(opj(d, "*.nii.gz")) for d in protocol_dirs]
+            protocol_files = []
+            for d in protocol_dirs:
+                protocol_search = glob.glob(opj(d, "*.nii.gz"))
+                protocol_files.append(protocol_search[0])
 
             print(protocol_files)
 
