@@ -201,7 +201,6 @@ def convert_to_bids(participants, protocol):
 				for index, item in enumerate(directory_filenames):
 					oldpath = directory_filenames[index]
 					newpath = (protocol_filenames[index].replace("###", str(row.participant_id)))
-					pdb.set_trace()
 					copyfile(oldpath, newpath)
 
 					print("sub-" + str(row.participant_id) + ": ++ "+ os.path.basename(newpath).rjust(20))
