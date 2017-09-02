@@ -21,7 +21,7 @@ from shutil import copyfile
 import json
 import sys
 import subprocess
-import os.path.join as opj # Helper function
+from os.path import join as opj # Helper function
 
 home_dir = os.environ['PI_HOME']
 
@@ -48,6 +48,8 @@ xls = pd.ExcelFile(opj(project_filepath, BIDS_filename[0]))
 
 # Parse fieldmap input
 fieldmap = xls.parse('fieldmap', convert_float=False)
-fieldmap.intended_for = fieldmap.intended_for.split()
+fieldmap.intended_for = [str(s) for s in fieldmap.intended_for]
+fieldmap.intended_for = [s.split() for s in fieldmap.intended_for]
+#fieldmap.intended_for = [int(x) for x in s for s in fieldmap.intended_for]
 
-print(fieldmap)
+print(fieldmap.intended_for)
