@@ -11,10 +11,6 @@
 # * Add support for fieldmaps
 # * Remove redundancies in the code
 # 
-# Load dependencies:
-
-# In[6]:
-
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -43,10 +39,6 @@ from os.path import join as opj # Helper function
 
 
 # Helper functions:
-
-# In[7]:
-
-
 # Open and write to file
 def write_file(contents, path):
     with open(path, 'w') as openfile:
@@ -62,6 +54,7 @@ def write_json(data, path):
     json_data = json.dumps(data)
     write_file(json_data, path)
     
+# Replace string in the filename of a path (i.e., ignoring text in the folder names)
 def replace_basename(series, oldstr, newstr):
     d = series.apply(os.path.dirname)
     f = series.apply(os.path.basename)
@@ -73,18 +66,11 @@ def replace_basename(series, oldstr, newstr):
         
     return new_paths
     
-
-
 # Set input and output directories:
-
-# In[8]:
-
-
 home_dir = os.environ['PI_HOME']
 scratch_dir = os.environ['PI_SCRATCH']
 
-#project_name =  str(sys.argv[1]).strip(' ') # Uncomment for production
-project_name = 'SwiSt'
+project_name =  str(sys.argv[1]).strip(' ')
 project_dir = opj(home_dir, project_name)
 report_dir = opj(project_dir, 'reports')
 NIMS = opj(scratch_dir, project_name, 'NIMS_data')
@@ -118,12 +104,7 @@ report_print('Output: %s' % BIDS)
 print('BIDS_info file: %s' % BIDS_file[0])
 report_file.write('BIDS_info file: %s \n \n -----' % BIDS_file[0])
 
-
-# Load dataset description:
-
-# In[13]:
-
-
+### Load dataset information
 dataset = xls.parse('dataset').iloc[1,:]
 dataset = dataset.dropna() # Remove blank fields
 dataset_data = {'Name': 'Dataset', 'BIDSVersion': '1.0.0'} # Default, required arguments
@@ -140,12 +121,7 @@ dataset_data
 with open(dataset_file, 'w') as openfile:
     json.dump(dataset_data, openfile)
 
-
-# Load participant information:
-
-# In[14]:
-
-
+### Load participant data
 participants = xls.parse('participants')
 participants.participant_id = ['sub-%02d' % int(n) for n in participants.participant_id]
 
@@ -154,13 +130,8 @@ participants_file = opj(BIDS, 'participants.tsv')
 participants.to_csv(participants_file, index = False, sep = '\t')
 
 
-# Load task data:
-
-# In[15]:
-
-
+### Load task data:
 tasks = xls.parse('tasks').iloc[1:,]
-tasks.head()
 
 # Save tasks to file
 for task in tasks.iterrows():
@@ -171,21 +142,12 @@ for task in tasks.iterrows():
     write_json(task_dict, task_fname)
 
 
-# Load protocol data:
-
-# In[16]:
-
+### Load protocol data:
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,]
 protocol = protocol[~pd.isnull(protocol.sequence_type)] # Remove columns with missing BIDS data types
-protocol.head()
-
 
 # Find input (NIMS-formatted) files and specify output (BIDS-formatted) files:
-
-# In[17]:
-
-
 report_file.write('Assembling copy job:')
 session_IDs = participants.nims_title
 participant_IDs = participants.participant_id
@@ -309,18 +271,15 @@ else:
     report_file.write(copyjob_msg)
 
 
-# The variable `copy_job` contains a dataframe with: input images (`in_img`), output images (`out_img`), output metadata (`out_info`), metadata path (`out_info_file`).
-
-# Now that all files have been found, let's make all of the necessary folders:
-
-# In[18]:
-
+# The variable `copy_job` contains a dataframe with: input images (`in_img`), output images (`out_img`),
+# output metadata (`out_info`), metadata path (`out_info_file`).
 
 data_types = np.unique(protocol['sequence_type'].tolist())
 sub_dirs = [opj(BIDS, sub) for sub in participant_IDs]
 data_dirs = [opj(s, d) for d in data_types for s in sub_dirs]
 new_dirs = sub_dirs + data_dirs
 
+# Make new folders
 report_print('New directories created:')
 for d in new_dirs:
     if not os.path.exists(d):
@@ -328,12 +287,7 @@ for d in new_dirs:
         os.makedirs(d)
 report_file.write('\n')
 
-
-# Copy over the files:
-
-# In[19]:
-
-
+# Copy files!
 report_print('Copying files...')
 for idx, row in copy_job.iterrows():
     report_file.write('Input: %s\n' % row['in_img'])
@@ -342,14 +296,9 @@ for idx, row in copy_job.iterrows():
     #os.system('fslreorient2std %s %s' % (row['out_img'], row['out_img']))
 
 
-# Create metadata:
-
-# In[20]:
-
-
+# Create sequence-specific metadata:
 copy_metadata = copy_job.dropna()
 for row in copy_metadata.iterrows():
     write_file(row[1]['out_info'], row[1]['out_info_file'])
     
 report_print('Done! Unpacking successful.')
-
