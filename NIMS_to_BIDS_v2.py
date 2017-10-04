@@ -11,6 +11,10 @@
 # * Add support for fieldmaps
 # * Remove redundancies in the code
 # 
+# Load dependencies:
+
+# In[1]:
+
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -39,6 +43,10 @@ from os.path import join as opj # Helper function
 
 
 # Helper functions:
+
+# In[2]:
+
+
 # Open and write to file
 def write_file(contents, path):
     with open(path, 'w') as openfile:
@@ -54,7 +62,9 @@ def write_json(data, path):
     json_data = json.dumps(data)
     write_file(json_data, path)
     
-# Replace string in the filename of a path (i.e., ignoring text in the folder names)
+# Replaces basename in path (ignoring text in the path name)
+# e.g. IN: replace_basename('fieldmap_path/fieldmap.nii.gz', 'fieldmap', 'magnitude') 
+# OUT: 'fieldmap_path/magnitude.nii.gz'
 def replace_basename(series, oldstr, newstr):
     d = series.apply(os.path.dirname)
     f = series.apply(os.path.basename)
@@ -65,12 +75,29 @@ def replace_basename(series, oldstr, newstr):
     new_paths = df.apply(new_path_fun, axis = 1).tolist()
         
     return new_paths
+
+# Assembles BIDS filename
+def assemble_bids_filename(d, custom_keys = None):
+    default_keys = ['participant', 'ses', 'task', 'acq', 'run', 'echo', 'filetype']
+    key_order = default_keys if custom_keys is None else custom_keys
     
+    filename_parts = [d[k] for k in key_order if k in d.keys()]
+    filename_base = '_'.join(filename_parts)
+    filename = filename_base + '.nii.gz'
+    
+    return filename
+
+
 # Set input and output directories:
+
+# In[3]:
+
+
 home_dir = os.environ['PI_HOME']
 scratch_dir = os.environ['PI_SCRATCH']
 
-project_name =  str(sys.argv[1]).strip(' ')
+#project_name =  str(sys.argv[1]).strip(' ') # Uncomment for production
+project_name = 'SwiSt'
 project_dir = opj(home_dir, project_name)
 report_dir = opj(project_dir, 'reports')
 NIMS = opj(scratch_dir, project_name, 'NIMS_data')
@@ -104,7 +131,12 @@ report_print('Output: %s' % BIDS)
 print('BIDS_info file: %s' % BIDS_file[0])
 report_file.write('BIDS_info file: %s \n \n -----' % BIDS_file[0])
 
-### Load dataset information
+
+# Load dataset description:
+
+# In[4]:
+
+
 dataset = xls.parse('dataset').iloc[1,:]
 dataset = dataset.dropna() # Remove blank fields
 dataset_data = {'Name': 'Dataset', 'BIDSVersion': '1.0.0'} # Default, required arguments
@@ -121,7 +153,12 @@ dataset_data
 with open(dataset_file, 'w') as openfile:
     json.dump(dataset_data, openfile)
 
-### Load participant data
+
+# Load participant information:
+
+# In[5]:
+
+
 participants = xls.parse('participants')
 participants.participant_id = ['sub-%02d' % int(n) for n in participants.participant_id]
 
@@ -130,7 +167,11 @@ participants_file = opj(BIDS, 'participants.tsv')
 participants.to_csv(participants_file, index = False, sep = '\t')
 
 
-### Load task data:
+# Load task data:
+
+# In[6]:
+
+
 tasks = xls.parse('tasks').iloc[1:,]
 
 # Save tasks to file
@@ -142,12 +183,20 @@ for task in tasks.iterrows():
     write_json(task_dict, task_fname)
 
 
-### Load protocol data:
+# Load protocol data:
+
+# In[7]:
+
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,]
 protocol = protocol[~pd.isnull(protocol.sequence_type)] # Remove columns with missing BIDS data types
 
+
 # Find input (NIMS-formatted) files and specify output (BIDS-formatted) files:
+
+# In[8]:
+
+
 report_file.write('Assembling copy job:')
 session_IDs = participants.nims_title
 participant_IDs = participants.participant_id
@@ -176,12 +225,18 @@ def input_path(row, session_id):
 # Helper function: Builds path for output files
 def output_path(row, participant_id):
     d = row.to_dict()
-    output_run = '_run-%02d' % d['run_number'] if ~np.isnan(d['run_number']) else ''
-    output_bold = '_bold' if d['sequence_type'] == 'func' else ''
-    output_filename = '%s_%s%s%s.nii.gz' % (participant_id, d['BIDS_scan_title'], output_run, output_bold)
-    output_path = opj(BIDS, participant_id, d['sequence_type'], output_filename)
+    filetypes = {'func': 'bold', 'fmap': 'fieldmap'}
+    out_d = {
+        'participant': participant_id,
+        'task': None if pd.isnull(d['BIDS_scan_title']) else d['BIDS_scan_title'],
+        'run': 'run-%02d' % d['run_number'] if ~np.isnan(d['run_number']) else None,
+        'filetype': filetypes[d['sequence_type']] if d['sequence_type'] in filetypes.keys() else None}
+    out_d = {k:v for k,v in out_d.items() if v is not None}
     
-    return output_path
+    out_file = assemble_bids_filename(out_d)
+    out_path = opj(BIDS, participant_id, d['sequence_type'], out_file)
+    
+    return out_path
     
 # Helper function: Prepares JSON file keys
 def output_keys(row, participant_id, session_protocol):
@@ -271,15 +326,18 @@ else:
     report_file.write(copyjob_msg)
 
 
-# The variable `copy_job` contains a dataframe with: input images (`in_img`), output images (`out_img`),
-# output metadata (`out_info`), metadata path (`out_info_file`).
+# The variable `copy_job` contains a dataframe with: input images (`in_img`), output images (`out_img`), output metadata (`out_info`), metadata path (`out_info_file`).
+
+# Now that all files have been found, let's make all of the necessary folders:
+
+# In[16]:
+
 
 data_types = np.unique(protocol['sequence_type'].tolist())
 sub_dirs = [opj(BIDS, sub) for sub in participant_IDs]
 data_dirs = [opj(s, d) for d in data_types for s in sub_dirs]
 new_dirs = sub_dirs + data_dirs
 
-# Make new folders
 report_print('New directories created:')
 for d in new_dirs:
     if not os.path.exists(d):
@@ -287,7 +345,12 @@ for d in new_dirs:
         os.makedirs(d)
 report_file.write('\n')
 
-# Copy files!
+
+# Copy over the files:
+
+# In[17]:
+
+
 report_print('Copying files...')
 for idx, row in copy_job.iterrows():
     report_file.write('Input: %s\n' % row['in_img'])
@@ -296,9 +359,14 @@ for idx, row in copy_job.iterrows():
     #os.system('fslreorient2std %s %s' % (row['out_img'], row['out_img']))
 
 
-# Create sequence-specific metadata:
+# Create metadata:
+
+# In[18]:
+
+
 copy_metadata = copy_job.dropna()
 for row in copy_metadata.iterrows():
     write_file(row[1]['out_info'], row[1]['out_info_file'])
     
 report_print('Done! Unpacking successful.')
+
