@@ -13,7 +13,7 @@
 # 
 # Load dependencies:
 
-# In[1]:
+# In[68]:
 
 
 from __future__ import print_function
@@ -44,18 +44,22 @@ from os.path import join as opj # Helper function
 
 # Helper functions:
 
-# In[2]:
+# In[69]:
 
 
 # Open and write to file
 def write_file(contents, path):
-    with open(path, 'w') as openfile:
+    with open(path, 'wb') as openfile:
         openfile.write(contents)
         
 # Make directory (if it doesn't already exist)
 def mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def copyif(source, target):
+    if not os.path.isfile(target):
+        copyfile(source, target)
 
 # Open and write to JSON file
 def write_json(data, path):
@@ -90,17 +94,22 @@ def assemble_bids_filename(d, custom_keys = None):
 
 # Set input and output directories:
 
-# In[3]:
+# In[70]:
 
 
 home_dir = os.environ['PI_HOME']
-scratch_dir = os.environ['PI_SCRATCH']
+scratch_dir = os.environ['SCRATCH']
 
-#project_name =  str(sys.argv[1]).strip(' ') # Uncomment for production
-project_name = 'SwiSt'
+project_name =  str(sys.argv[1]).strip(' ') # Uncomment for production
 project_dir = opj(home_dir, project_name)
 report_dir = opj(project_dir, 'reports')
-NIMS = opj(scratch_dir, project_name, 'NIMS_data')
+NIMS = opj(scratch_dir, project_name, 'NIMS_data_anonymized')
+if os.path.exists(NIMS):
+    print('Using anonymized data')
+else:
+    print('Warning! Using non-anonymized data')
+    NIMS = NIMS.replace('_anonymized', '')
+
 BIDS = opj(project_dir, 'BIDS_data')
 BIDS_file = glob.glob(opj(project_dir, '*BIDS_info*.xlsx'))
 
@@ -134,7 +143,7 @@ report_file.write('BIDS_info file: %s \n \n -----' % BIDS_file[0])
 
 # Load dataset description:
 
-# In[4]:
+# In[71]:
 
 
 dataset = xls.parse('dataset').iloc[1,:]
@@ -149,27 +158,28 @@ if 'Authors' in dataset_data:
 
 # Save to file
 dataset_file = opj(BIDS, 'dataset_description.json')
-dataset_data
-with open(dataset_file, 'w') as openfile:
-    json.dump(dataset_data, openfile)
-
+write_json(dataset_data, dataset_file)
 
 # Load participant information:
 
-# In[5]:
+# In[72]:
 
 
 participants = xls.parse('participants')
-participants.participant_id = ['sub-%02d' % int(n) for n in participants.participant_id]
+
+try:
+    participants.participant_id = ['sub-%02d' % int(n) for n in participants.participant_id]
+except ValueError:
+    participants.participant_id = ['sub-%s' % p for p in participants.participant_id]
 
 # Save to file
 participants_file = opj(BIDS, 'participants.tsv')
-participants.to_csv(participants_file, index = False, sep = '\t')
+participants.to_csv(participants_file, index = False, sep = b'\t')
 
 
 # Load task data:
 
-# In[6]:
+# In[73]:
 
 
 tasks = xls.parse('tasks').iloc[1:,]
@@ -185,23 +195,39 @@ for task in tasks.iterrows():
 
 # Load protocol data:
 
-# In[7]:
+# In[74]:
 
 
 protocol = xls.parse('protocol', convert_float=False).iloc[1:,]
 protocol = protocol[~pd.isnull(protocol.sequence_type)] # Remove columns with missing BIDS data types
+participant_ids = list(protocol.participant_id)
+
+for p in range(len(participant_ids)):
+    try:
+        participant_ids[p] = 'sub-%02d' % participant_ids[p]
+    except TypeError:
+        pass
+    
+protocol['participant_id'] = participant_ids
 
 
 # Find input (NIMS-formatted) files and specify output (BIDS-formatted) files:
 
-# In[8]:
+# In[75]:
 
 
 report_file.write('Assembling copy job:')
-session_IDs = participants.nims_title
-participant_IDs = participants.participant_id
-custom_protocols = np.unique(protocol.nims_title)
+
+# Get participant and session IDs
+session_IDs = list(participants.nims_title)
+participant_IDs = list(participants.participant_id)
+session_dict = dict(zip(participant_IDs, session_IDs))
+
+# Identify custom protocols
+custom_protocols = np.unique(list(protocol.participant_id))
 custom_protocols = custom_protocols[custom_protocols != 'default']
+print('Using custom protocols for sessions: %s' % custom_protocols)
+
 copy_job_cols = ['session', 'in_img', 'out_img', 'out_info', 'out_info_file']
 copy_job = pd.DataFrame(columns = copy_job_cols)
 
@@ -241,7 +267,7 @@ def output_path(row, participant_id):
 # Helper function: Prepares JSON file keys
 def output_keys(row, participant_id, session_protocol):
     # Fields common to all sequences
-    standard_fields = ['nims_title', 'sequence_no', 'NIMS_scan_title',
+    standard_fields = ['participant_id', 'sequence_no', 'NIMS_scan_title',
                        'BIDS_scan_title', 'run_number', 'sequence_type']
     
     # Remove standard fields and NA'sfrom row 
@@ -269,7 +295,7 @@ def output_keys(row, participant_id, session_protocol):
         target_full_path = target_protocol.apply(get_target_path, axis = 1)
         target_full_path = target_full_path.tolist()
         target_path = [get_rel_path(path) for path in target_full_path]
-        
+
         # Replace IntendedFor with properly formatted paths
         row_dict['IntendedFor'] = target_path
         
@@ -278,14 +304,14 @@ def output_keys(row, participant_id, session_protocol):
     return row_json
     
 # Iterate over participants and assemble copy job:
-for session, participant_id in zip(session_IDs, participant_IDs):
+for (participant_id, session) in zip(participant_IDs, session_IDs):
     #participant_id = participants[participants.nims_title == session]['participant_id']
     
     # Get correct protocol
-    is_custom = session in custom_protocols
+    is_custom = participant_id in custom_protocols
     protocol_type = 'CUSTOM' if is_custom else 'DEFAULT'
-    protocol_ref = session if is_custom else 'default'
-    session_protocol = protocol[protocol.nims_title == protocol_ref]
+    protocol_ref = participant_id if is_custom else 'default'
+    session_protocol = protocol[protocol.participant_id == protocol_ref]
     
     # Assemble copy_job
     input_files = session_protocol.apply(lambda row: input_path(row, session), axis=1)
@@ -330,7 +356,7 @@ else:
 
 # Now that all files have been found, let's make all of the necessary folders:
 
-# In[16]:
+# In[9]:
 
 
 data_types = np.unique(protocol['sequence_type'].tolist())
@@ -348,20 +374,20 @@ report_file.write('\n')
 
 # Copy over the files:
 
-# In[17]:
+# In[10]:
 
 
 report_print('Copying files...')
 for idx, row in copy_job.iterrows():
     report_file.write('Input: %s\n' % row['in_img'])
     report_file.write('Output: %s \n \n' % row['out_img'])
-    copyfile(row['in_img'], row['out_img'])
+    copyif(row['in_img'], row['out_img'])
     #os.system('fslreorient2std %s %s' % (row['out_img'], row['out_img']))
 
 
 # Create metadata:
 
-# In[18]:
+# In[11]:
 
 
 copy_metadata = copy_job.dropna()
